@@ -4,4 +4,4 @@ requests
 anthropic
 python-telegram-bot
 base58
-
+python-telegram-bot[webhooks]
