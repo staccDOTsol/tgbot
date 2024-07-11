@@ -5,7 +5,7 @@ import json
 import anthropic
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import os
-from flask import Flask, request
+
 
 with open ("train_data.jsonl", "r") as f:
     documents = f.read().splitlines()
@@ -90,24 +90,18 @@ async def predict(update, context):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"(if this is simply a number from 0-100 then 0=bad 100=good) Prediction for token {token_ca}: {score}")
 
 def main():
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8443))
     application = Application.builder().token(os.environ['TELEGRAM_TOKEN']).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, predict))
     
-    # Create Flask app
-    app = Flask(__name__)
-    
-    @app.route('/')
-    def index():
-        return 'Bot is running'
-    
-    # Start the bot in a separate thread
-    import threading
-    threading.Thread(target=application.run_polling, daemon=True).start()
-    
-    # Run Flask app
-    app.run(host='0.0.0.0', port=port)
+    # Run the bot
+    application.run_webhook(
+        listen='0.0.0.0',
+        port=port,
+        url_path=os.environ['TELEGRAM_TOKEN'],
+        webhook_url=f'https://stacc-telegram-bot-2cacbed52c15.herokuapp.com/{os.environ["TELEGRAM_TOKEN"]}'
+    )
 
 if __name__ == '__main__':
     main()
