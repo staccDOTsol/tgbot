@@ -4,7 +4,7 @@ import requests
 import json
 import anthropic
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
-
+import os
 
 with open ("train_data.jsonl", "r") as f:
     documents = f.read().splitlines()
@@ -14,7 +14,7 @@ import json
 # Embed the documents in batches of 128
 with open ('doc_embeds.json','r') as f:
     doc_embds = json.loads(f.read())
-vo = voyageai.Client("pa-ZDlzKmYctTq0VQoiIssXbwqkv0SNcqH1Ivhc-bRdPCs")
+vo = voyageai.Client(os.environ["VOYAGEAI_API_KEY"])
 
 # ... existing code for loading documents and doc_embds ...
 
@@ -32,7 +32,7 @@ def fetch_latest_data(token_ca):
         return None
 
 # Initialize Anthropic client
-client = anthropic.Client(api_key="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")
+client = anthropic.Client(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 def predict_score(token_ca):
     import base58
@@ -89,10 +89,11 @@ async def predict(update, context):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"(if this is simply a number from 0-100 then 0=bad 100=good) Prediction for token {token_ca}: {score}")
 
 def main():
-    application = Application.builder().token('7319764650:AAEhe37YqceKBwrc1HOlsb8T1SE8CteahVc').build()
+    port = int(os.environ.get('PORT', 5000))
+    application = Application.builder().token(os.environ['TELEGRAM_TOKEN']).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, predict))
-    application.run_polling()
+    application.run_webhook(listen="0.0.0.0", port=port, url_path='7319764650:AAEhe37YqceKBwrc1HOlsb8T1SE8CteahVc')
 
 if __name__ == '__main__':
     main()
