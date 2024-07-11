@@ -1,0 +1,7 @@
+voyageai
+numpy
+requests
+anthropic
+python-telegram-bot
+base58
+
