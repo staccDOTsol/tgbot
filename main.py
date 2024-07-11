@@ -5,6 +5,7 @@ import json
 import anthropic
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import os
+from flask import Flask, request
 
 with open ("train_data.jsonl", "r") as f:
     documents = f.read().splitlines()
@@ -93,7 +94,20 @@ def main():
     application = Application.builder().token(os.environ['TELEGRAM_TOKEN']).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, predict))
-    application.run_webhook(listen="0.0.0.0", port=port, url_path='7319764650:AAEhe37YqceKBwrc1HOlsb8T1SE8CteahVc')
+    
+    # Create Flask app
+    app = Flask(__name__)
+    
+    @app.route('/')
+    def index():
+        return 'Bot is running'
+    
+    # Start the bot in a separate thread
+    import threading
+    threading.Thread(target=application.run_polling, daemon=True).start()
+    
+    # Run Flask app
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
     main()
